@@ -3,14 +3,23 @@
 import serial
 import time
 import pygame
+import os
+import random
 
 # シリアルポートのデバイスファイル名に差し替える
-port = '/dev/bell_button'
+PORT = '/dev/bell_button'
+# ベル音源のディレクトリ名
+BELL_DIR = 'bells/'
+
+def getBellSound():
+    bells = os.listdir(BELL_DIR)
+    bell_filename = BELL_DIR + random.choice(bells)
+    pygame.mixer.music.load(bell_filename)
 
 pygame.mixer.init(44100, -16, 1, 256)
-bell = pygame.mixer.Sound('sounds/bell.wav')
 announce = pygame.mixer.Sound('sounds/announce.wav')
-s = serial.Serial(port, dsrdtr=True)
+bell = getBellSound()
+s = serial.Serial(PORT, dsrdtr=True)
 
 s.dtr = True
 last_state = False
@@ -23,10 +32,12 @@ while True:
         exit()
 
     if last_state == False and state == True:
-        bell.play(loops=-1)
+        pygame.mixer.music.play(loops=-1)
         last_state = True
     elif last_state == True and state == False:
-        bell.stop()
+        pygame.mixer.music.stop()
         last_state = False
         announce.play()
+        getBellSound()
+        
     time.sleep(0.01)
